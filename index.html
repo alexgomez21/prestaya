@@ -1558,24 +1558,25 @@ function clearAllData() {
 // INIT
 // ============================================================
 
-// NUEVO CÓDIGO: Cargar los datos desde GitHub la primera vez
+// Si la base de datos está vacía (primera vez que se abre la app)
 if (!localStorage.getItem(DB_KEY)) {
-  fetch('prestaya_backup_2026-04-24.json')
+  // Busca el archivo genérico en GitHub
+  fetch('datos_iniciales.json')
     .then(response => {
-      if (!response.ok) throw new Error('No se encontró el archivo JSON');
+      if (!response.ok) throw new Error('Archivo no encontrado');
       return response.json();
     })
     .then(data => {
       if (data && data.routes) {
         db = data;
         normalizeDB();
-        saveDB();
-        renderRoutes();
-        showToast('✅ Datos iniciales cargados con éxito');
+        saveDB(); // Lo guarda en el navegador
+        renderRoutes(); // Actualiza la pantalla
+        showToast('✅ Datos cargados automáticamente');
       }
     })
     .catch(error => {
-      console.error('Error al cargar el JSON inicial:', error);
+      console.log('No se encontró datos_iniciales.json, iniciando en blanco.');
     });
 }
 
@@ -1586,8 +1587,9 @@ const origShowView = showView;
 window.showView = function(id, push=true) {
   origShowView(id, push);
   if (id==='view-settings') renderSettings();
-  if (id==='view-closing') renderClosingView(); // Corregido: antes decía renderClosingVaiew()
+  if (id==='view-closing') renderClosingView();
 };
+
 
 </script>
 
