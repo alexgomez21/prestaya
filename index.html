@@ -258,6 +258,7 @@ function normalizeDB() {
   db.cancelledClients = Array.isArray(db.cancelledClients) ? db.cancelledClients : [];
   db.closings = Array.isArray(db.closings) ? db.closings : [];
   db.settings = db.settings || { theme: 'light' };
+
   db.routes.forEach((r, routeIndex) => {
     r.clients = Array.isArray(r.clients) ? r.clients : [];
     r.pin = String(r.pin || '').trim().slice(0, 10);
@@ -271,8 +272,8 @@ function normalizeDB() {
     if (!r.id) r.id = 'route_' + routeIndex;
   });
 }
-normalizeDB();
 
+normalizeDB();
 function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
 
 // ============================================================
@@ -283,7 +284,6 @@ function titleCase(str) {
   return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 
-// Currency: store in pesos (×1000), display formatted
 function parseCOP(val) {
   const n = parseFloat(String(val).replace(/[^0-9.]/g,''));
   if (isNaN(n)) return 0;
@@ -390,7 +390,6 @@ function goBack() {
 }
 
 function goBackToRoute() {
-  // Restore scroll
   showView('view-route-detail', false);
   setTimeout(() => window.scrollTo(0, routeScrollPos), 50);
 }
@@ -414,6 +413,7 @@ function openModal(html) {
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('modal-box').scrollTop = 0;
 }
+
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 function closeModalIfOutside(e) { if (e.target.id === 'modal-overlay') closeModal(); }
 
@@ -504,14 +504,8 @@ function switchRouteTab(tab) {
 }
 
 function getRoute() { return db.routes.find(r=>r.id===currentRouteId); }
-
-function hasActiveCredit(client) {
-  return (client.credits||[]).some(c=>c.active);
-}
-
-function getActiveCredit(client) {
-  return (client.credits||[]).find(c=>c.active) || (client.credits||[]).slice(-1)[0];
-}
+function hasActiveCredit(client) { return (client.credits||[]).some(c=>c.active); }
+function getActiveCredit(client) { return (client.credits||[]).find(c=>c.active) || (client.credits||[]).slice(-1)[0]; }
 
 function getClientBalance(client) {
   const cr = getActiveCredit(client);
@@ -524,7 +518,7 @@ function getDayStatus(credit) {
   if (!credit || !credit.active) return null;
   const td = today();
   const end = credit.endDate;
-  const diff = diffDays(td, end); // positive = days left, negative = overdue
+  const diff = diffDays(td, end); 
   const overdue = -diff;
   return { diff, overdue, isOverdue: diff < 0 };
 }
@@ -676,12 +670,10 @@ function saveClient(editId) {
       const ref = r.clients.find(c=>c.id===pos);
       if (ref) {
         newOrder = (ref.order||0) + 0.5;
-        // Normalize orders
         r.clients.sort((a,b)=>(a.order||0)-(b.order||0));
       }
     }
     r.clients.push({ id: uid(), cedula, name, cel, order: newOrder, credits: [] });
-    // Normalize
     r.clients.sort((a,b)=>(a.order||0)-(b.order||0));
     r.clients.forEach((c,i)=>c.order=i+1);
     saveDB(); closeModal(); renderClientsList(); showToast('✅ Cliente agregado');
@@ -692,7 +684,6 @@ function deleteClient(id) {
   if (!confirm2('¿Eliminar este cliente y todos sus créditos?')) return;
   const r = getRoute();
   const c = r.clients.find(x=>x.id===id);
-  // Save to cancelled memory
   if (c) {
     db.cancelledClients = db.cancelledClients||[];
     const existing = db.cancelledClients.find(x=>x.cedula===c.cedula);
@@ -723,11 +714,9 @@ function renderClientDetail() {
   currentClientId = client.id;
   document.getElementById('client-detail-name').textContent = client.name;
   document.getElementById('client-nav-info').textContent = `${currentClientIndex+1} / ${clients.length}`;
-
   const cr = getActiveCredit(client);
   const content = document.getElementById('client-detail-content');
 
-  // Client info bar
   let html = `<div style="background:var(--bg2);padding:12px 16px;border-bottom:1px solid var(--border);">
     <div style="font-size:13px;color:var(--text3);">📋 Cédula: <b>${client.cedula}</b>${client.cel?` · 📱 ${client.cel}`:''}</div>
   </div>`;
@@ -743,7 +732,6 @@ function renderClientDetail() {
   const balance = Math.max(0, cr.amountToPay - paid);
   const pct = cr.amountToPay>0 ? Math.min(100,Math.round(paid/cr.amountToPay*100)) : 0;
   const sb = getStatusBadge(cr);
-  const s = getDayStatus(cr);
 
   html += `<div class="credit-detail-header">
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
@@ -763,7 +751,6 @@ function renderClientDetail() {
     <div class="tab" onclick="switchClientTab('history')">Historial</div>
   </div>`;
 
-  // TAB INFO
   html += `<div id="ct-info" class="tab-content active section">
     <div class="stat-grid" style="margin-bottom:12px;">
       <div class="stat-card"><div class="stat-value">${formatCOP(cr.amountLent)}</div><div class="stat-label">Prestado</div></div>
@@ -789,12 +776,12 @@ function renderClientDetail() {
     </div>
   </div>`;
 
-  // TAB PAYMENTS
   const payments = (cr.payments||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
   html += `<div id="ct-payments" class="tab-content">
     <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
       <button class="btn btn-success btn-sm" onclick="openPaymentModal('${client.id}','${cr.id}')">➕ Nuevo Abono</button>
     </div>`;
+
   if (!payments.length) {
     html += `<div class="empty-state"><div class="icon">💰</div><p>Sin abonos registrados</p></div>`;
   } else {
@@ -811,7 +798,6 @@ function renderClientDetail() {
   }
   html += `</div>`;
 
-  // TAB HISTORY (all credits)
   const allCredits = (client.credits||[]).slice().reverse();
   html += `<div id="ct-history" class="tab-content section">
     <div style="font-weight:700;margin-bottom:10px;">Historial de Créditos</div>`;
@@ -829,7 +815,6 @@ function renderClientDetail() {
     </div>`;
   }).join('') || '<div class="empty-state" style="padding:20px;"><p>Sin historial</p></div>';
   html += `<div style="margin-top:12px;"><button class="btn btn-primary btn-full" onclick="openCreditModal('${client.id}')">➕ Nuevo Crédito</button></div></div>`;
-
   content.innerHTML = html;
 }
 
@@ -933,16 +918,13 @@ function saveCredit(clientId, creditId) {
   const interest = parseFloat(((amountToPay-amountLent)/amountLent*100).toFixed(2));
   const months = days/30;
   const monthlyInterest = parseFloat((months>0?interest/months:interest).toFixed(2));
-
   const r = getRoute();
   const client = r.clients.find(c=>c.id===clientId);
   if (!client.credits) client.credits = [];
-
   if (creditId) {
     const cr = client.credits.find(x=>x.id===creditId);
     Object.assign(cr, { amountLent, amountToPay, interest, monthlyInterest, startDate:start, endDate:end, termDays:days, paymentFrequency:freq });
   } else {
-    // Deactivate previous
     client.credits.forEach(c=>c.active=false);
     client.credits.push({ id:uid(), amountLent, amountToPay, interest, monthlyInterest, startDate:start, endDate:end, termDays:days, paymentFrequency:freq, active:true, payments:[] });
   }
@@ -966,7 +948,6 @@ function openPaymentModal(clientId, creditId, paymentId) {
   const cr = client.credits.find(x=>x.id===creditId);
   const pmt = paymentId ? cr.payments.find(p=>p.id===paymentId) : null;
   const balance = Math.max(0, cr.amountToPay - (cr.payments||[]).reduce((s,p)=>s+p.amount,0));
-
   openModal(`<div class="modal-title">${pmt?'Editar':'Nuevo'} Abono <button class="btn-icon" onclick="closeModal()">✕</button></div>
     <div class="info-box">💡 Ingresa el valor en miles (ej: 5 = $5.000)</div>
     <div class="highlight" style="margin-bottom:12px;">Saldo actual: <b>${formatCOP(balance)}</b></div>
@@ -993,11 +974,9 @@ function savePayment(clientId, creditId, paymentId) {
     p.amount = amount; p.date = date;
   } else {
     cr.payments.push({ id:uid(), amount, date });
-    // Check if fully paid
     const totalPaid = cr.payments.reduce((s,p)=>s+p.amount,0);
     if (totalPaid >= cr.amountToPay) {
       cr.active = false;
-      // Save to cancelled memory
       db.cancelledClients = db.cancelledClients||[];
       const existing = db.cancelledClients.find(x=>x.cedula===client.cedula);
       if (!existing) db.cancelledClients.push({ cedula:client.cedula, name:client.name, cel:client.cel||'' });
@@ -1013,7 +992,6 @@ function deletePayment(clientId, creditId, paymentId) {
   const client = r.clients.find(c=>c.id===clientId);
   const cr = client.credits.find(x=>x.id===creditId);
   cr.payments = cr.payments.filter(p=>p.id!==paymentId);
-  // Reactivate if was deactivated
   if (!cr.active) cr.active = true;
   saveDB(); renderClientsList(document.getElementById('route-search')?.value.trim() || ''); renderRoutes(); renderClientDetail(); showToast('🗑 Abono eliminado');
 }
@@ -1025,7 +1003,6 @@ function renderRouteStats() {
   const r = getRoute();
   const clients = r.clients||[];
   const el = document.getElementById('route-stats-content');
-
   let totalClients = clients.length;
   let activeClients = 0, cancelledCount = 0;
   let totalLent = 0, totalWithInterest = 0, totalBalance = 0, totalPaid = 0;
@@ -1047,7 +1024,6 @@ function renderRouteStats() {
       sumMonthlyInterest += cr.monthlyInterest;
       interestCount++;
     }
-    // Cancelled (all fully paid)
     (c.credits||[]).filter(cr2=>!cr2.active).forEach(cr2=>{
       const paid2 = (cr2.payments||[]).reduce((s,p)=>s+p.amount,0);
       if (paid2 >= cr2.amountToPay) { cancelledCount++; cancelledUtility += (cr2.amountToPay-cr2.amountLent); }
@@ -1094,6 +1070,7 @@ function renderOverdueList() {
   const clients = (r.clients||[]).filter(c=>{ const cr=getActiveCredit(c); if(!cr||!cr.active)return false; const s=getDayStatus(cr); return s&&s.isOverdue&&s.overdue>30; });
   clients.sort((a,b)=>{ const sa=getDayStatus(getActiveCredit(a)),sb=getDayStatus(getActiveCredit(b)); return sb.overdue-sa.overdue; });
   if (!clients.length) { el.innerHTML='<div class="empty-state"><div class="icon">✅</div><p>No hay clientes vencidos +30 días</p></div>'; return; }
+
   el.innerHTML = `<div style="font-weight:700;font-size:16px;margin-bottom:12px;">⚠️ Clientes Vencidos +30 días</div>` +
     clients.map(c=>{
       const cr = getActiveCredit(c);
@@ -1169,7 +1146,6 @@ function goToClient(routeId, clientId) {
 function renderClosingView() {
   const el = document.getElementById('closing-content');
   const routes = db.routes;
-
   let html = `<div style="font-weight:700;font-size:16px;margin-bottom:14px;">📊 Cierre del Día</div>
     <div class="form-group"><label>Seleccionar Ruta</label>
       <select class="form-control" id="closing-route-sel" onchange="updateClosingPreview()">
@@ -1199,7 +1175,6 @@ function renderClosingView() {
     <div class="divider"></div>
     <div style="font-weight:700;font-size:15px;margin-bottom:10px;">📜 Historial de Cierres</div>
     <div id="closings-history"></div>`;
-
   el.innerHTML = html;
   updateClosingPreview();
   renderClosingsHistory();
@@ -1215,7 +1190,6 @@ function getClosingData(routeId, dateStr) {
         payments.push({ client:c.name, amount:p.amount });
       });
       if (cr.startDate===dateStr) loans.push({ client:c.name, amount:cr.amountLent });
-      // Finished that day = last payment on that date and fully paid
       const totalPd = (cr.payments||[]).reduce((s,p2)=>s+p2.amount,0);
       const lastP = (cr.payments||[]).filter(p=>p.date===dateStr);
       if (lastP.length && totalPd>=cr.amountToPay) {
@@ -1259,10 +1233,8 @@ function calcClosing() {
   const base = (parseFloat(document.getElementById('cl-base')?.value)||0)*1000;
   const descuento = (parseFloat(document.getElementById('cl-descuento')?.value)||0)*1000;
   const efectivo = (parseFloat(document.getElementById('cl-efectivo')?.value)||0)*1000;
-
   const calculado = data.paymentTotal - data.loanTotal - gastos + base - descuento;
   const diferencia = efectivo - calculado;
-
   const el = document.getElementById('cl-result');
   el.innerHTML = `<div style="font-weight:700;margin-bottom:8px;">📊 Resultado del Cierre</div>
     <div style="display:flex;justify-content:space-between;">Abonos: <b>${formatCOP(data.paymentTotal)}</b></div>
@@ -1290,9 +1262,7 @@ function saveClosing() {
   const efectivo = (parseFloat(document.getElementById('cl-efectivo')?.value)||0)*1000;
   const calculado = data.paymentTotal - data.loanTotal - gastos + base - descuento;
   const diferencia = efectivo - calculado;
-
   db.closings = db.closings||[];
-  // Check if exists for same route+date, if so update
   const existIdx = db.closings.findIndex(c=>c.routeId===routeId&&c.date===dateStr);
   const closingObj = { id:uid(), routeId, date:dateStr,
     paymentTotal:data.paymentTotal, loanTotal:data.loanTotal,
@@ -1300,7 +1270,6 @@ function saveClosing() {
     finishedCount:data.finishedCount, details:data.payments, finishedDetails:data.finishedCards };
   if (existIdx>=0) db.closings[existIdx] = { ...closingObj, id:db.closings[existIdx].id };
   else db.closings.push(closingObj);
-
   saveDB(); renderClosingsHistory(); showToast('✅ Cierre guardado');
 }
 
@@ -1447,7 +1416,6 @@ function exportRouteExcel() {
 function exportRouteSummaryExcel() {
   const r = getRoute();
   const clients = r.clients||[];
-  // Build same summary data
   let rows = [['Ruta','Total Clientes','Activos','Cancelados','Capital Prestado','Con Intereses','Saldo Total','Interés Promedio %','Interés Mensual %','Utilidad Activos','Utilidad Cancelados','Vencidos +30d','Saldo Vencidos +30d']];
   let activeClients=0,cancelledCount=0,totalLent=0,totalWithInterest=0,totalBalance=0,totalUtility=0,cancelledUtility=0,sumI=0,sumMI=0,iCount=0;
   clients.forEach(c=>{
@@ -1457,8 +1425,6 @@ function exportRouteSummaryExcel() {
   });
   const overdue30=clients.filter(c=>{const cr=getActiveCredit(c);if(!cr||!cr.active)return false;const s=getDayStatus(cr);return s&&s.isOverdue&&s.overdue>30;});
   rows.push([r.name,clients.length,activeClients,cancelledCount,totalLent,totalWithInterest,totalBalance,iCount>0?(sumI/iCount).toFixed(1):0,iCount>0?(sumMI/iCount).toFixed(1):0,totalUtility,cancelledUtility,overdue30.length,overdue30.reduce((s,c)=>s+getClientBalance(c),0)]);
-
-  // Load existing if any
   let wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
   XLSX.utils.book_append_sheet(wb, ws, 'Resumen');
@@ -1469,7 +1435,6 @@ function exportRouteSummaryExcel() {
 function exportClosingExcel() {
   const closings = (db.closings||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
   const wb = XLSX.utils.book_new();
-  // Group by route
   const byRoute = {};
   closings.forEach(c=>{
     if(!byRoute[c.routeId]) byRoute[c.routeId]=[];
@@ -1501,7 +1466,6 @@ function importClientsExcel(evt) {
       const rows = XLSX.utils.sheet_to_json(ws, {header:1});
       const r = getRoute();
       let added=0;
-      // Expected columns: Nombre, Cédula, Celular, Prestado, Con Intereses, (optional rest)
       rows.slice(1).forEach(row=>{
         if (!row[0]&&!row[1]) return;
         const name = titleCase(String(row[0]||'').trim());
@@ -1593,6 +1557,28 @@ function clearAllData() {
 // ============================================================
 // INIT
 // ============================================================
+
+// NUEVO CÓDIGO: Cargar los datos desde GitHub la primera vez
+if (!localStorage.getItem(DB_KEY)) {
+  fetch('prestaya_backup_2026-04-24.json')
+    .then(response => {
+      if (!response.ok) throw new Error('No se encontró el archivo JSON');
+      return response.json();
+    })
+    .then(data => {
+      if (data && data.routes) {
+        db = data;
+        normalizeDB();
+        saveDB();
+        renderRoutes();
+        showToast('✅ Datos iniciales cargados con éxito');
+      }
+    })
+    .catch(error => {
+      console.error('Error al cargar el JSON inicial:', error);
+    });
+}
+
 renderRoutes();
 
 // Set up view init hooks
@@ -1600,9 +1586,11 @@ const origShowView = showView;
 window.showView = function(id, push=true) {
   origShowView(id, push);
   if (id==='view-settings') renderSettings();
-  if (id==='view-closing') renderClosingView();
+  if (id==='view-closing') renderClosingView(); // Corregido: antes decía renderClosingVaiew()
 };
+
 </script>
+
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
