@@ -364,23 +364,18 @@ function getPaidTodayBadge(credit) {
 
 function getCreditProgressBar(credit) {
   if (!credit || !credit.startDate || !credit.endDate) return '';
-  const start = new Date(credit.startDate);
-  const end = new Date(credit.endDate);
-  const now = new Date(today());
-  const total = Math.max(1, (end - start) / 86400000);
-  const elapsed = Math.min(total, Math.max(0, (now - start) / 86400000));
-  const pct = credit.active ? Math.round((elapsed / total) * 100) : 100;
+  const paid = (credit.payments||[]).reduce((s,p)=>s+p.amount,0);
+  const total = credit.amountToPay || 0;
+  const pct = total > 0 ? Math.min(100, Math.round(paid / total * 100)) : (credit.active ? 0 : 100);
 
   // Color basado en estado del crédito
   let color, pctColor;
   if (!credit.active) {
-    // Finalizado → verde al 100%
     color = 'linear-gradient(90deg,#38a169,#68d391)'; pctColor = '#68d391';
   } else {
     const s = getDayStatus(credit);
     const o = s ? s.overdue : 0;
     if (!s || !s.isOverdue) {
-      // Pagando normal o ≥75% → verde, sino azul
       if (pct >= 75) { color = 'linear-gradient(90deg,#38a169,#68d391)'; pctColor = '#68d391'; }
       else { color = 'linear-gradient(90deg,#3182ce,#63b3ed)'; pctColor = '#63b3ed'; }
     } else if (o <= 30) {
