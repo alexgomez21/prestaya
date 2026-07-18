@@ -363,21 +363,39 @@ function getPaidTodayBadge(credit) {
 }
 
 function getCreditProgressBar(credit) {
-  if (!credit || !credit.active || !credit.startDate || !credit.endDate) return '';
+  if (!credit || !credit.startDate || !credit.endDate) return '';
   const start = new Date(credit.startDate);
   const end = new Date(credit.endDate);
   const now = new Date(today());
   const total = Math.max(1, (end - start) / 86400000);
   const elapsed = Math.min(total, Math.max(0, (now - start) / 86400000));
-  const pct = Math.round((elapsed / total) * 100);
-  let color;
-  if (pct >= 80) color = 'linear-gradient(90deg,#e53e3e,#fc8181)';
-  else if (pct >= 50) color = 'linear-gradient(90deg,#dd6b20,#f6ad55)';
-  else color = 'linear-gradient(90deg,#3182ce,#63b3ed)';
+  const pct = credit.active ? Math.round((elapsed / total) * 100) : 100;
+
+  // Color basado en estado del crédito
+  let color, pctColor;
+  if (!credit.active) {
+    // Finalizado → verde al 100%
+    color = 'linear-gradient(90deg,#38a169,#68d391)'; pctColor = '#68d391';
+  } else {
+    const s = getDayStatus(credit);
+    const o = s ? s.overdue : 0;
+    if (!s || !s.isOverdue) {
+      // Pagando normal o ≥75% → verde, sino azul
+      if (pct >= 75) { color = 'linear-gradient(90deg,#38a169,#68d391)'; pctColor = '#68d391'; }
+      else { color = 'linear-gradient(90deg,#3182ce,#63b3ed)'; pctColor = '#63b3ed'; }
+    } else if (o <= 30) {
+      color = 'linear-gradient(90deg,#c05621,#f6ad55)'; pctColor = '#f6ad55';
+    } else if (o <= 60) {
+      color = 'linear-gradient(90deg,#c53030,#fc8181)'; pctColor = '#fc8181';
+    } else {
+      color = 'linear-gradient(90deg,#9b1c1c,#e53e3e)'; pctColor = '#e53e3e';
+    }
+  }
+
   return `<div style="margin-top:6px;">
     <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px;">
       <span>${fmtDate(credit.startDate)} → ${fmtDate(credit.endDate)}</span>
-      <span style="font-weight:600;">${pct}%</span>
+      <span style="font-weight:700;color:${pctColor};">${pct}%</span>
     </div>
     <div style="height:6px;border-radius:20px;background:var(--bg3);overflow:hidden;">
       <div style="height:100%;width:${pct}%;border-radius:20px;background:${color};"></div>
