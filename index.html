@@ -23,8 +23,9 @@
   --orange-dark-bg: #fff3e0; --orange-dark-text: #9c4221; --orange-dark-border: #fb923c;
   --red-light-bg: #fff5f5; --red-light-text: #c53030; --red-light-border: #feb2b2;
   --red-moroso-bg: #fef2f2; --red-moroso-text: #991b1b; --red-moroso-border: #f87171;
+  --purple-bg: #f3e8ff; --purple-text: #6b21a8; --purple-border: #c084fc;
   /* Tamaño compacto (default) */
-  --sz-base: 14px; --sz-name: 15px; --sz-sub: 12px; --sz-badge: 12px;
+  --sz-base: 14px; --sz-name: 15px; --sz-sub: 12px; --sz-badge: 14px;
   --sz-btn: 14px; --sz-input: 15px; --sz-label: 13px;
   --sz-avatar: 42px; --sz-avatar-font: 16px;
   --sz-card-pad: 12px 16px; --sz-row-gap: 10px; --sz-btn-pad: 9px 16px;
@@ -40,16 +41,17 @@
   --orange-dark-bg: #3d1f0a; --orange-dark-text: #fb923c; --orange-dark-border: #9c4221;
   --red-light-bg: #3d1515; --red-light-text: #feb2b2; --red-light-border: #c53030;
   --red-moroso-bg: #450a0a; --red-moroso-text: #fca5a5; --red-moroso-border: #991b1b;
+  --purple-bg: #2e1065; --purple-text: #d8b4fe; --purple-border: #9333ea;
 }
 [data-size="md"] {
-  --sz-base: 16px; --sz-name: 17px; --sz-sub: 14px; --sz-badge: 13px;
+  --sz-base: 16px; --sz-name: 17px; --sz-sub: 14px; --sz-badge: 15px;
   --sz-btn: 16px; --sz-input: 17px; --sz-label: 15px;
   --sz-avatar: 52px; --sz-avatar-font: 19px;
   --sz-card-pad: 16px 18px; --sz-row-gap: 14px; --sz-btn-pad: 13px 18px;
   --sz-fab: 64px; --sz-fab-font: 30px;
 }
 [data-size="lg"] {
-  --sz-base: 19px; --sz-name: 21px; --sz-sub: 16px; --sz-badge: 15px;
+  --sz-base: 19px; --sz-name: 21px; --sz-sub: 16px; --sz-badge: 17px;
   --sz-btn: 19px; --sz-input: 19px; --sz-label: 17px;
   --sz-avatar: 62px; --sz-avatar-font: 23px;
   --sz-card-pad: 20px 20px; --sz-row-gap: 18px; --sz-btn-pad: 17px 20px;
@@ -87,7 +89,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;f
 select.form-control{cursor:pointer;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:var(--sz-badge);font-weight:600;}
+.badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:var(--sz-badge);font-weight:600;}
+.badge-purple{background:var(--purple-bg);color:var(--purple-text);border:1px solid var(--purple-border);}
 .badge-green{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-border);}
 .badge-orange-light{background:var(--orange-light-bg);color:var(--orange-light-text);border:1px solid var(--orange-light-border);}
 .badge-orange-dark{background:var(--orange-dark-bg);color:var(--orange-dark-text);border:1px solid var(--orange-dark-border);}
@@ -379,7 +382,7 @@ function hasPaymentOnDate(credit, dateStr=today()) {
 }
 
 function getPaidTodayBadge(credit) {
-  return hasPaymentOnDate(credit, today()) ? '<span class="badge badge-green">💵 Dio Hoy</span>' : '';
+  return hasPaymentOnDate(credit, today()) ? '<span class="badge badge-purple">💵 Dio Hoy</span>' : '';
 }
 
 function getCreditProgressBar(credit) {
@@ -512,7 +515,7 @@ function renderRoutes() {
       <div class="route-info">
         <div class="route-name">${r.name}${r.pin ? ' 🔐' : ''}</div>
         <div class="route-sub">${clients.length} clientes · ${activeCredits.length} activos · Saldo: ${formatCOP(totalSaldo)}${r.pin ? ' · Protegida' : ''}</div>
-        ${paidTodayCount ? `<div style="margin-top:5px;"><span class="badge badge-green">💵 ${paidTodayCount} dio/dieron hoy</span></div>` : ''}
+        ${paidTodayCount ? `<div style="margin-top:5px;"><span class="badge badge-purple">💵 ${paidTodayCount} dio/dieron hoy</span></div>` : ''}
       </div>
       <span style="color:var(--text3);font-size:20px;">›</span>
     </div>`;
